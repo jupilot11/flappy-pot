@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#E84C1E" />
+    <meta name="color-scheme" content="light" />
+    <meta name="description" content="Flappy Pot: keep the chef pot flying, dodge the utensils, collect tips." />
+    <title>Flappy Pot</title>
+    <link rel="icon" type="image/svg+xml" href="./src/assets/favicon.svg" />
+    <!-- linked here, not imported from main.ts, so the page never paints unstyled -->
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <div id="frame">
+      <main id="stage" data-state="ready" data-first="1">
+        <canvas id="game" aria-label="Flappy Pot game" role="img"></canvas>
+
+        <!-- HUD -->
+        <div id="score" aria-hidden="true">0</div>
+        <header id="hud">
+          <button id="btn-pause" class="icon-btn" aria-label="Pause">
+            <svg class="i-pause" viewBox="0 0 24 24" width="1.25em" height="1.25em" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.5"/><rect x="14" y="5" width="4" height="14" rx="1.5"/></svg>
+            <svg class="i-play" viewBox="0 0 24 24" width="1.25em" height="1.25em" fill="currentColor"><path d="M8 5.6v12.8a1 1 0 0 0 1.5.86l10.4-6.4a1 1 0 0 0 0-1.72L9.5 4.74A1 1 0 0 0 8 5.6z"/></svg>
+          </button>
+          <div class="hud-right">
+            <div class="tips-pill" title="Tips collected this run">
+              <img src="./src/assets/coin.svg" alt="" width="22" height="22" />
+              <span id="tips">0</span>
+            </div>
+            <button id="btn-mute" class="icon-btn" aria-label="Mute sound" aria-pressed="false">
+              <svg class="i-sound" viewBox="0 0 24 24" width="1.25em" height="1.25em" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z" fill="currentColor"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg>
+              <svg class="i-muted" viewBox="0 0 24 24" width="1.25em" height="1.25em" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <!-- First-run start card -->
+        <section id="start" class="overlay" aria-label="Start">
+          <div class="card">
+            <img class="loader" src="./src/assets/chef-pot-loader.svg" alt="" width="240" height="240" />
+            <h1>Flappy Pot</h1>
+            <p class="sub">Keep the pot flying. Dodge the utensils and grab the tips.</p>
+            <div class="chip"><span class="dot"></span>Tap · Space · &uarr; to flap</div>
+            <button id="btn-start" class="btn primary">Start Cooking</button>
+            <p class="best-line"><span class="label">Best</span> <b id="best-start">0</b><span class="sep" aria-hidden="true"></span><span class="label">Tip jar</span> <img src="./src/assets/coin.svg" alt="" width="22" height="22" /><b class="jar">0</b></p>
+          </div>
+        </section>
+
+        <!-- Ready hint (after the first run) -->
+        <section id="hint" class="overlay" aria-hidden="true">
+          <div class="hint-chip">
+            <svg viewBox="0 0 24 24" width="1.25em" height="1.25em" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="2.6" fill="currentColor"/><circle class="ripple" cx="12" cy="12" r="7"/></svg>
+            Tap to flap
+          </div>
+        </section>
+
+        <!-- Game over -->
+        <section id="over" class="overlay" role="dialog" aria-labelledby="over-title" aria-describedby="rank next-rank over-score over-stats">
+          <div class="card">
+            <span id="newbest" class="badge">New best!</span>
+            <h2 id="over-title">Order&rsquo;s Burnt!</h2>
+            <div class="rank-chip" id="rank">Line Cook</div>
+            <p class="next-rank" id="next-rank"></p>
+            <div class="big-score" id="over-score"><span class="label">Score</span><span id="final-score">0</span></div>
+            <div class="stats" id="over-stats">
+              <div class="stat"><span class="label">Best</span><b id="final-best">0</b></div>
+              <div class="stat"><span class="label">Tips</span><b class="tips-val"><img src="./src/assets/coin.svg" alt="" width="22" height="22" /><span id="final-tips">0</span></b></div>
+            </div>
+            <button id="btn-again" class="btn primary">
+              <svg viewBox="0 0 24 24" width="1.25em" height="1.25em" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.6-5.9M20 4v4.5h-4.5"/></svg>
+              Cook Again
+            </button>
+            <p class="best-line"><span class="label">Tip jar</span> <img src="./src/assets/coin.svg" alt="" width="22" height="22" /><b class="jar">0</b></p>
+          </div>
+        </section>
+
+        <!-- Paused -->
+        <section id="paused" class="overlay" role="dialog" aria-label="Paused">
+          <div class="card compact">
+            <h2>Paused</h2>
+            <p class="sub">The soup can wait.</p>
+            <button id="btn-resume" class="btn primary">Keep Cooking</button>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

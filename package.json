@@ -1,0 +1,22 @@
+{
+  "name": "flappy-pot",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A responsive, web-based flappy game starring the chef pot. Vite + TypeScript + HTML5 Canvas.",
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && vite build",
+    "build:single": "tsc --noEmit && vite build -c vite.single.config.ts",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vite-plugin-singlefile": "^2.3.3"
+  },
+  "dependencies": {
+    "@fontsource/plus-jakarta-sans": "^5.3.0"
+  }
+}

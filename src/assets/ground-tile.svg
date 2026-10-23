@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <!-- gingham tablecloth: 24px period, drawn 2x2 so it tiles seamlessly -->
+  <rect width="48" height="48" fill="#FFF8F2"/>
+  <!-- per-rect fill-opacity (NOT group opacity) so the stripe overlaps get darker -->
+  <g fill="#E84C1E" fill-opacity=".24">
+    <rect x="0" y="0" width="12" height="48"/>
+    <rect x="24" y="0" width="12" height="48"/>
+    <rect x="0" y="0" width="48" height="12"/>
+    <rect x="0" y="24" width="48" height="12"/>
+  </g>
+</svg>

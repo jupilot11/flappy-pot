@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 54" width="52" height="54">
+  <!-- neck (bottom of sprite) -->
+  <path d="M10 40 L16 54 L36 54 L42 40 Z" fill="#1F1715"/>
+  <rect x="16" y="46" width="20" height="8" fill="#1F1715"/>
+  <!-- blade -->
+  <rect x="0" y="0" width="52" height="44" rx="12" fill="#E84C1E"/>
+  <rect x="4" y="4" width="44" height="36" rx="9" fill="#F0602F"/>
+  <!-- slots -->
+  <rect x="11" y="9" width="5" height="24" rx="2.5" fill="#B93612"/>
+  <rect x="23.5" y="9" width="5" height="24" rx="2.5" fill="#B93612"/>
+  <rect x="36" y="9" width="5" height="24" rx="2.5" fill="#B93612"/>
+  <rect x="6" y="6" width="3" height="14" rx="1.5" fill="#FFFFFF" opacity=".55"/>
+</svg>

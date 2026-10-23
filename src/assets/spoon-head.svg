@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 46" width="52" height="46">
+  <!-- neck joining the shaft (bottom of sprite) -->
+  <path d="M12 30 C12 38 14 40 14 46 L38 46 C38 40 40 38 40 30 Z" fill="#D99A5B"/>
+  <rect x="14" y="36" width="24" height="10" fill="#D99A5B"/>
+  <rect x="18" y="34" width="4" height="12" fill="#EBB783"/>
+  <!-- bowl -->
+  <ellipse cx="26" cy="19" rx="26" ry="19" fill="#C98448"/>
+  <ellipse cx="26" cy="17" rx="22" ry="15" fill="#D99A5B"/>
+  <ellipse cx="26" cy="16" rx="17" ry="11" fill="#B9733A"/>
+  <ellipse cx="22" cy="13" rx="9" ry="4.5" fill="#CC8A4C"/>
+</svg>

@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="Loading">
+  <style>
+    svg {
+      --orange: #E84C1E;
+      --ink: #1F1715;
+      --steam: #F8C4AE;
+      --flame: #FF8A3D;
+      --flame-core: #FFD27A;
+    }
+
+    /* one loop = 1.6s: lid pops twice (tilting each way), steam puffs out, flame flickers */
+    .lid {
+      transform-box: view-box;
+      transform-origin: 120px 121px;
+      animation: lid 1.6s ease-in-out infinite;
+    }
+    @keyframes lid {
+      0%, 20%, 50%, 70%, 100% { transform: translateY(0) rotate(0deg); }
+      10% { transform: translateY(-7px) rotate(-5deg); }
+      60% { transform: translateY(-7px) rotate(5deg); }
+    }
+
+    .puff {
+      opacity: 0;
+      transform-box: fill-box;
+      transform-origin: 50% 50%;
+      animation: puff 1.6s ease-out infinite backwards;
+    }
+    .p1 { animation-delay: .032s; }
+    .p2 { animation-delay: .8s; }
+    .p3 { animation-delay: .416s; }
+    @keyframes puff {
+      0%   { opacity: 0;   transform: translateY(0)     scale(.6); }
+      18%  { opacity: .62; }
+      62%  { opacity: 0;   transform: translateY(-52px) scale(1.6); }
+      100% { opacity: 0;   transform: translateY(-52px) scale(1.6); }
+    }
+
+    .flame {
+      transform-box: fill-box;
+      transform-origin: 50% 100%;
+      animation: flick .533s ease-in-out infinite alternate;
+    }
+    .f2 { animation-delay: -.2s; }
+    .f3 { animation-delay: -.4s; }
+    @keyframes flick {
+      from { transform: scaleY(.82); }
+      to   { transform: scaleY(1.12); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .lid, .puff, .flame { animation-play-state: paused; }
+    }
+  </style>
+
+  <!-- burner -->
+  <rect x="90" y="184" width="60" height="6" rx="3" fill="var(--ink)"/>
+
+  <!-- flames -->
+  <g transform="translate(108 0)"><g class="flame f1">
+    <path fill="var(--flame)" d="M-4.2 180 C-4.6 177 -1.5 175.5 0 171 C1.5 175.5 4.6 177 4.2 180 A4.2 4.2 0 0 1 -4.2 180 Z"/>
+    <path fill="var(--flame-core)" d="M-2.2 181.5 C-2.4 180 -0.8 179 0 176.5 C0.8 179 2.4 180 2.2 181.5 A2.2 2.2 0 0 1 -2.2 181.5 Z"/>
+  </g></g>
+  <g transform="translate(120 0)"><g class="flame f2">
+    <path fill="var(--flame)" d="M-4.2 180 C-4.6 177 -1.5 175.5 0 171 C1.5 175.5 4.6 177 4.2 180 A4.2 4.2 0 0 1 -4.2 180 Z"/>
+    <path fill="var(--flame-core)" d="M-2.2 181.5 C-2.4 180 -0.8 179 0 176.5 C0.8 179 2.4 180 2.2 181.5 A2.2 2.2 0 0 1 -2.2 181.5 Z"/>
+  </g></g>
+  <g transform="translate(132 0)"><g class="flame f3">
+    <path fill="var(--flame)" d="M-4.2 180 C-4.6 177 -1.5 175.5 0 171 C1.5 175.5 4.6 177 4.2 180 A4.2 4.2 0 0 1 -4.2 180 Z"/>
+    <path fill="var(--flame-core)" d="M-2.2 181.5 C-2.4 180 -0.8 179 0 176.5 C0.8 179 2.4 180 2.2 181.5 A2.2 2.2 0 0 1 -2.2 181.5 Z"/>
+  </g></g>
+
+  <!-- pot: handles, body, highlight -->
+  <rect x="60" y="130" width="14" height="8" rx="4" fill="var(--ink)"/>
+  <rect x="166" y="130" width="14" height="8" rx="4" fill="var(--ink)"/>
+  <rect x="72" y="118" width="96" height="54" rx="14" fill="var(--orange)"/>
+  <rect x="81" y="128" width="6" height="34" rx="3" fill="#fff"/>
+
+  <!-- steam (behind the lid) -->
+  <g class="puff p1" fill="var(--steam)">
+    <circle cx="96" cy="100" r="5"/><circle cx="92.5" cy="101.8" r="3.5"/><circle cx="99.5" cy="102" r="3.3"/>
+  </g>
+  <g class="puff p2" fill="var(--steam)">
+    <circle cx="144" cy="100" r="5"/><circle cx="140.5" cy="101.8" r="3.5"/><circle cx="147.5" cy="102" r="3.3"/>
+  </g>
+  <g class="puff p3" fill="var(--steam)">
+    <circle cx="120" cy="100" r="5"/><circle cx="116.5" cy="101.8" r="3.5"/><circle cx="123.5" cy="102" r="3.3"/>
+  </g>
+
+  <!-- lid -->
+  <g class="lid">
+    <path fill="var(--ink)" d="M78 110 C78 92 100 86 120 86 C140 86 162 92 162 110 L162 116 L78 116 Z"/>
+    <rect x="66" y="110" width="108" height="11" rx="5.5" fill="var(--ink)"/>
+    <circle cx="120" cy="84" r="5" fill="var(--orange)"/>
+  </g>
+</svg>
