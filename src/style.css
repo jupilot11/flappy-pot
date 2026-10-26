@@ -48,6 +48,10 @@ body {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+  /* full screen until layout() sizes it, so the load-error card still shows if the script never runs */
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
   background: var(--ink);
 }
 
@@ -90,7 +94,8 @@ canvas {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: calc(env(safe-area-inset-top, 0px) + 0.9em) 0.9em 0;
+  padding: calc(env(safe-area-inset-top, 0px) + 0.9em) calc(env(safe-area-inset-right, 0px) + 0.9em) 0
+    calc(env(safe-area-inset-left, 0px) + 0.9em);
   pointer-events: none;
 }
 
@@ -312,6 +317,7 @@ h2 {
   justify-content: center;
   gap: 0.5em;
   width: 100%;
+  min-height: 48px; /* thumb-sized even when --u shrinks the card */
   margin-top: 0.95em;
   padding: 0.85em 1.2em;
   font: inherit;
@@ -365,8 +371,34 @@ h2 {
   padding-top: calc(env(safe-area-inset-top, 0px) + 4.5em);
 }
 
-#stage[data-first='1'][data-state='ready'] #start {
+#stage[data-first='1'][data-state='ready'] #start,
+#stage[data-state='error'] #start {
   display: flex;
+}
+
+/* load failure: the start card swaps its controls for a message and a reload button */
+.load-error {
+  display: none;
+}
+
+.load-error p {
+  margin: 0.5em 0 0;
+  line-height: 1.45;
+}
+
+#stage[data-state='error'] .load-error {
+  display: block;
+}
+
+#stage[data-state='error'] #start :is(.sub, .chip, #btn-start, .best-line),
+#stage[data-state='error'] #hud,
+#stage[data-state='error'] #score {
+  display: none;
+}
+
+/* an unpainted canvas is black; let the sky colour show instead */
+#stage[data-state='error'] canvas {
+  visibility: hidden;
 }
 
 .loader {
@@ -529,6 +561,52 @@ h2 {
   #start,
   #over {
     padding-top: calc(env(safe-area-inset-top, 0px) + 0.9em);
+  }
+}
+
+/* landscape phones: the stacked game-over card is taller than the screen, so split it in two columns */
+@media (max-height: 500px) and (min-aspect-ratio: 1/1) {
+  #over {
+    align-items: center;
+    padding-top: 0;
+  }
+  #over .card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      'title stats'
+      'rank  stats'
+      'next  btn'
+      'score btn'
+      'score jar';
+    column-gap: 1.2em;
+    align-items: center;
+    width: min(92%, 34em);
+  }
+  #over h2 {
+    grid-area: title;
+  }
+  #over .rank-chip {
+    grid-area: rank;
+    justify-self: center;
+  }
+  #over .next-rank {
+    grid-area: next;
+  }
+  #over .big-score {
+    grid-area: score;
+    margin: 0.4em 0 0;
+  }
+  #over .stats {
+    grid-area: stats;
+  }
+  #over .btn {
+    grid-area: btn;
+    margin-top: 0.6em;
+  }
+  #over .best-line {
+    grid-area: jar;
+    margin-top: 0.5em;
   }
 }
 

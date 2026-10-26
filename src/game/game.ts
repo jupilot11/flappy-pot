@@ -4,10 +4,11 @@ import { store } from './storage';
 
 /* ───────────────────────── constants (all in "game units") ───────────────────────── */
 
-/** Logical width is fixed; logical height flexes with the screen so tall phones get more sky. */
-export const W = 360;
+/** The world flexes with the screen: tall phones get more sky, landscape screens see further ahead. */
+const MIN_W = 360;
+const MAX_W = 1200;
 const MIN_H = 540;
-const MAX_H = 780;
+const MAX_H = 860;
 
 const GROUND_H = 84;
 const EDGE_H = 8;
@@ -125,8 +126,10 @@ export class Game {
   private bg?: HTMLCanvasElement;
   private resizeToken = 0;
 
+  private W = MIN_W;
   private H = 640;
   private S = 1; // device pixels per game unit
+  private potX = POT_X;
 
   private state: GameState = 'ready';
   private time = 0;
@@ -166,7 +169,7 @@ export class Game {
     this.ctx = canvas.getContext('2d', { alpha: false })!;
     this.pot.y = this.readyY();
     for (let i = 0; i < 5; i++) {
-      this.clouds.push({ x: rand(0, W), y: rand(50, this.H * 0.42), s: rand(0.55, 1), v: rand(7, 16) });
+      this.clouds.push({ x: rand(0, this.W), y: rand(50, this.H * 0.42), s: rand(0.55, 1), v: rand(7, 16) });
     }
   }
 
@@ -188,28 +191,46 @@ export class Game {
   async resize(stageW: number, stageH: number, dpr: number): Promise<void> {
     const token = ++this.resizeToken;
 
-    let newH = clamp((W * stageH) / stageW, MIN_H, MAX_H);
+    let newH = clamp((MIN_W * stageH) / stageW, MIN_H, MAX_H);
     // Don't shift the playfield under the player's feet because a mobile URL bar collapsed.
     if ((this.state === 'play' || this.state === 'dying') && Math.abs(newH - this.H) < 160) newH = this.H;
+    let newW = clamp((newH * stageW) / stageH, MIN_W, MAX_W);
+    // Mid-run the pot can't slide sideways into a utensil; a new width waits for the next reset().
+    if (this.state !== 'ready') newW = this.W;
 
-    const scale = Math.min(stageW / W, stageH / newH);
+    const scale = Math.min(stageW / newW, stageH / newH);
     const S = scale * dpr;
 
     const oldH = this.H;
+    const oldW = this.W;
     this.H = newH;
+    this.W = newW;
     this.S = S;
     if (oldH !== newH) this.rescaleWorld(oldH, newH);
+    if (oldW !== newW) {
+      // Pushed right on wide screens so it clears landscape notches and the HUD keeps its distance.
+      this.potX = POT_X + (newW - MIN_W) * 0.22;
+      for (const c of this.clouds) c.x *= newW / oldW;
+    }
 
-    this.canvas.style.width = `${W * scale}px`;
+    this.canvas.style.width = `${this.W * scale}px`;
     this.canvas.style.height = `${newH * scale}px`;
-    this.canvas.width = Math.max(1, Math.round(W * S));
+    this.canvas.width = Math.max(1, Math.round(this.W * S));
     this.canvas.height = Math.max(1, Math.round(newH * S));
 
     if (!this.sp || Math.abs(S - this.spScale) / S > 0.02) {
-      const sheet = await bakeAll(S);
+      let sheet: SpriteSheet | undefined;
+      try {
+        sheet = await bakeAll(S);
+      } catch (err) {
+        // With no sprites at all the game can't draw; otherwise the old ones still work, just less crisp.
+        if (!this.sp) throw err;
+      }
       if (token !== this.resizeToken) return; // a newer resize superseded this one
-      this.sp = sheet;
-      this.spScale = S;
+      if (sheet) {
+        this.sp = sheet;
+        this.spScale = S;
+      }
     }
     this.buildBackground();
     if (this.state === 'paused') this.render(); // resizing cleared the canvas and the loop is stopped
@@ -318,7 +339,7 @@ export class Game {
 
   private lidPos(): [number, number] {
     const { rot, y } = this.pot;
-    return [POT_X + 33 * Math.sin(rot), y - 33 * Math.cos(rot)];
+    return [this.potX + 33 * Math.sin(rot), y - 33 * Math.cos(rot)];
   }
 
   private begin(): void {
@@ -328,7 +349,9 @@ export class Game {
     this.obstacles = [];
     this.pot.vy = 0;
     this.worldX = 0;
-    this.spawn(W + 150, this.pot.y);
+    this.spawn(this.potX + 414, this.pot.y);
+    // Wide screens: fill the visible stretch at the usual spacing instead of leaving it empty.
+    for (let x = this.potX + 414 + SPACING; x <= this.W + 20; x += SPACING) this.spawn(x);
     this.hooks.onScore(0);
     this.hooks.onTips(0);
     this.hooks.onState('play');
@@ -367,7 +390,7 @@ export class Game {
     for (const c of this.clouds) {
       c.x -= (c.v + (this.state === 'play' ? this.speed() * 0.08 : 0)) * dt;
       if (c.x < -100) {
-        c.x = W + rand(10, 80);
+        c.x = this.W + rand(10, 80);
         c.y = rand(50, this.H * 0.42);
       }
     }
@@ -454,10 +477,10 @@ export class Game {
     for (const o of this.obstacles) o.x -= speed * dt;
     while (this.obstacles.length && this.obstacles[0].x < -OB_W - 12) this.obstacles.shift();
     const last = this.obstacles[this.obstacles.length - 1];
-    if (!last || last.x <= W + 20 - SPACING) this.spawn(W + 20);
+    if (!last || last.x <= this.W + 20 - SPACING) this.spawn(this.W + 20);
 
     for (const o of this.obstacles) {
-      if (!o.scored && o.x + OB_W / 2 < POT_X) {
+      if (!o.scored && o.x + OB_W / 2 < this.potX) {
         o.scored = true;
         this.score++;
         this.sfx.score();
@@ -468,7 +491,7 @@ export class Game {
         return;
       }
       if (o.coin && !o.coin.taken) {
-        const dx = o.x + OB_W / 2 - POT_X;
+        const dx = o.x + OB_W / 2 - this.potX;
         const dy = o.coin.y - (pot.y - 4);
         if (dx * dx + dy * dy < 28 * 28) {
           o.coin.taken = true;
@@ -499,7 +522,7 @@ export class Game {
         pot.y = this.groundTop() - HB.b;
         pot.vy = 0;
         this.landed = true;
-        this.burst(POT_X, this.groundTop() - 2, 8, [COLORS.steam, COLORS.white], 110, 400, -120);
+        this.burst(this.potX, this.groundTop() - 2, 8, [COLORS.steam, COLORS.white], 110, 400, -120);
       }
     } else {
       this.landedT += dt;
@@ -508,8 +531,8 @@ export class Game {
   }
 
   private hits(o: Obstacle): boolean {
-    const l = POT_X + HB.l;
-    const r = POT_X + HB.r;
+    const l = this.potX + HB.l;
+    const r = this.potX + HB.r;
     const t = this.pot.y + HB.t;
     const b = this.pot.y + HB.b;
     if (r < o.x + 4 || l > o.x + OB_W - 4) return false;
@@ -553,7 +576,7 @@ export class Game {
       rot: this.pot.rot,
       vr: rand(5, 9) * (Math.random() < 0.5 ? -1 : 1),
     };
-    this.burst(POT_X, this.pot.y, 16, [COLORS.orange, COLORS.flame, COLORS.flameCore, COLORS.ink, COLORS.white], 260, 700);
+    this.burst(this.potX, this.pot.y, 16, [COLORS.orange, COLORS.flame, COLORS.flameCore, COLORS.ink, COLORS.white], 260, 700);
     this.hooks.onState('dying');
   }
 
@@ -649,7 +672,7 @@ export class Game {
     grad.addColorStop(0, '#FFF6EF');
     grad.addColorStop(1, '#FBDCCB');
     g.fillStyle = grad;
-    g.fillRect(0, 0, W, this.H);
+    g.fillRect(0, 0, this.W, this.H);
 
     // Faint subway-tile wall.
     g.strokeStyle = 'rgba(232, 76, 30, 0.075)';
@@ -659,9 +682,9 @@ export class Game {
     g.beginPath();
     for (let row = 0, y = 0; y < this.H; row++, y += th) {
       g.moveTo(0, y);
-      g.lineTo(W, y);
+      g.lineTo(this.W, y);
       const off = row % 2 ? tw / 2 : 0;
-      for (let x = -off; x < W; x += tw) {
+      for (let x = -off; x < this.W; x += tw) {
         if (x > 0) {
           g.moveTo(x, y);
           g.lineTo(x, y + th);
@@ -698,7 +721,7 @@ export class Game {
       const sk = sp.skyline;
       const off = (this.worldX * 0.28) % sk.w;
       const y = this.snap(gt - sk.h + EDGE_H + 2);
-      for (let x = -off; x < W; x += sk.w) ctx.drawImage(sk.c, this.snap(x), y, sk.w, sk.h);
+      for (let x = -off; x < this.W; x += sk.w) ctx.drawImage(sk.c, this.snap(x), y, sk.w, sk.h);
     }
 
     // obstacles + coins
@@ -712,7 +735,7 @@ export class Game {
       const tile = sp.groundTile;
       const off = this.worldX % tile.w;
       for (let ry = 0; ry < 2; ry++) {
-        for (let x = -off; x < W; x += tile.w) {
+        for (let x = -off; x < this.W; x += tile.w) {
           ctx.drawImage(tile.c, this.snap(x), this.snap(gt + EDGE_H + ry * tile.h), tile.w, tile.h);
         }
       }
@@ -720,11 +743,11 @@ export class Game {
       shade.addColorStop(0, 'rgba(31,23,21,0.22)');
       shade.addColorStop(1, 'rgba(31,23,21,0)');
       ctx.fillStyle = shade;
-      ctx.fillRect(0, gt + EDGE_H, W, 12);
+      ctx.fillRect(0, gt + EDGE_H, this.W, 12);
       ctx.fillStyle = COLORS.ink;
-      ctx.fillRect(0, gt, W, EDGE_H);
+      ctx.fillRect(0, gt, this.W, EDGE_H);
       ctx.fillStyle = '#4A3C37';
-      ctx.fillRect(0, gt + 1.5, W, 1.5);
+      ctx.fillRect(0, gt + 1.5, this.W, 1.5);
     }
 
     this.drawParticles(sp);
@@ -733,7 +756,7 @@ export class Game {
     if (this.flash > 0) {
       ctx.setTransform(S, 0, 0, S, 0, 0);
       ctx.fillStyle = `rgba(255,255,255,${Math.min(0.6, this.flash * 0.6)})`;
-      ctx.fillRect(0, 0, W, this.H);
+      ctx.fillRect(0, 0, this.W, this.H);
     }
   }
 
@@ -796,7 +819,7 @@ export class Game {
     const alive = this.state === 'ready' || this.state === 'play' || this.state === 'paused';
 
     ctx.save();
-    ctx.translate(POT_X, y);
+    ctx.translate(this.potX, y);
     ctx.rotate(rot);
 
     // flames: they flare when you flap

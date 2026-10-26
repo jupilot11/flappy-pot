@@ -27,7 +27,9 @@ npm run typecheck
 
 ## How the responsiveness works
 
-- **Fixed logical width (360), flexible height (540–780).** Tall phones get more sky instead of black bars.
+- **Flexible world: height 540–860, width 360–1200.** Tall phones get more sky, landscape screens see further
+  ahead, so the canvas fills the screen instead of leaving bars. The width only changes between runs, never mid-run.
+- On short landscape screens the game-over card splits into two columns so it fits.
 - Canvas is scaled to fit the stage and rendered at `devicePixelRatio` (capped at 3) so it stays sharp.
 - **SVG sprites are re-rasterised at exactly the on-screen pixel size** whenever the scale changes, then drawn
   1:1. This avoids the blurry-SVG-in-canvas problem on Safari and keeps tiling seams out of the ground and skyline.

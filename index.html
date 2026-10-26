@@ -10,6 +10,28 @@
     <link rel="icon" type="image/svg+xml" href="./src/assets/favicon.svg" />
     <!-- linked here, not imported from main.ts, so the page never paints unstyled -->
     <link rel="stylesheet" href="./src/style.css" />
+    <!-- classic script, so it still runs when the game bundle can't load -->
+    <script>
+      function potLoadFailed() {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', potLoadFailed);
+          return;
+        }
+        var stage = document.getElementById('stage');
+        if (!stage || stage.dataset.state === 'error') return;
+        stage.dataset.state = 'error';
+        document.getElementById('btn-reload').focus();
+      }
+      // A script that fails to download fires a non-bubbling error; capture catches it.
+      // (Vite's build drops onerror attributes from the entry script, so this can't live on the tag.)
+      window.addEventListener(
+        'error',
+        function (e) {
+          if (e.target instanceof HTMLScriptElement) potLoadFailed();
+        },
+        true
+      );
+    </script>
   </head>
   <body>
     <div id="frame">
@@ -43,6 +65,10 @@
             <p class="sub">Keep the pot flying. Dodge the utensils and grab the tips.</p>
             <div class="chip"><span class="dot"></span>Tap · Space · &uarr; to flap</div>
             <button id="btn-start" class="btn primary">Start Cooking</button>
+            <div class="load-error" role="alert">
+              <p><b>Couldn&rsquo;t load the game.</b> Check your connection and reload.</p>
+              <button id="btn-reload" class="btn primary" onclick="location.reload()">Reload</button>
+            </div>
             <p class="best-line"><span class="label">Best</span> <b id="best-start">0</b><span class="sep" aria-hidden="true"></span><span class="label">Tip jar</span> <img src="./src/assets/coin.svg" alt="" width="22" height="22" /><b class="jar">0</b></p>
           </div>
         </section>

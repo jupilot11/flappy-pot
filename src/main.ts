@@ -1,6 +1,9 @@
 import { Game, type GameState } from './game/game';
 import { store } from './game/storage';
 
+/** Defined inline in index.html so it also covers the bundle itself failing to load. */
+declare function potLoadFailed(): void;
+
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 
 const frame = $('frame');
@@ -21,6 +24,8 @@ const game = new Game(canvas, {
   onState(s: GameState) {
     stage.dataset.state = s;
     if (s === 'play') stage.dataset.first = '0';
+    // The world width is held during a run; apply any rotation or resize that happened meanwhile.
+    if (s === 'ready') layout();
     // Put keyboard / screen-reader focus on the card's action so its title and result are announced.
     if (s === 'over') $('btn-again').focus({ preventScroll: true });
     if (s === 'paused') $('btn-resume').focus({ preventScroll: true });
@@ -74,9 +79,13 @@ function layout(): void {
   frame.style.height = `${fh}px`;
 
   const rect = stage.getBoundingClientRect();
-  void game.resize(rect.width, rect.height, Math.min(window.devicePixelRatio || 1, 3));
-  // Scale UI by the playfield width, not the stage: in landscape the canvas is a narrow column.
-  const u = Math.min(1.4, Math.max(0.85, canvas.getBoundingClientRect().width / 390));
+  game.resize(rect.width, rect.height, Math.min(window.devicePixelRatio || 1, 3)).catch((err: unknown) => {
+    console.error(err);
+    potLoadFailed();
+  });
+  // Scale UI by the playfield's shorter side, so landscape cards don't outgrow a short screen.
+  const c = canvas.getBoundingClientRect();
+  const u = Math.min(1.4, Math.max(0.85, Math.min(c.width / 390, c.height / 700)));
   stage.style.setProperty('--u', u.toFixed(3));
 }
 
@@ -92,6 +101,7 @@ window.addEventListener('orientationchange', scheduleLayout);
 /* ───────────── input ───────────── */
 
 function act(): void {
+  if (stage.dataset.state === 'error') return;
   game.sfx.unlock();
   switch (game.getState()) {
     case 'ready':
@@ -114,7 +124,8 @@ stage.addEventListener('pointerdown', (e) => {
 });
 
 window.addEventListener('keydown', (e) => {
-  if (e.repeat) return;
+  // In the error state the only control is Reload; leave its native Space / Enter alone.
+  if (e.repeat || stage.dataset.state === 'error') return;
   if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
     e.preventDefault();
     const active = document.activeElement;
